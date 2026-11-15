@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f6f7fb" />
+    <meta name="description" content="ChiGuide AI 智能聊天助手" />
+    <title>ChiGuide · AI 助手</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <a class="brand" href="#" aria-label="ChiGuide 首页">
+          <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 3.5 28 10v12L16 28.5 4 22V10L16 3.5Z"/><path d="m11 16 3.2 3.2L21.5 12"/></svg></span>
+          <span><strong>ChiGuide</strong><small>AI 助手</small></span>
+        </a>
+        <button class="new-chat" id="newChatBtn" type="button"><span aria-hidden="true">＋</span> 开始新对话</button>
+        <div class="sidebar-caption">工作空间</div>
+        <div class="history-list" id="historyList"></div>
+        <div class="sidebar-spacer"></div>
+        <section class="settings-card" aria-labelledby="settingsTitle">
+          <div class="settings-heading"><span class="settings-icon" aria-hidden="true">⚙</span><strong id="settingsTitle">模型设置</strong><span class="secure-dot" title="密钥仅保存在当前标签页"></span></div>
+          <label for="baseUrlInput">API 地址</label>
+          <input id="baseUrlInput" type="url" autocomplete="url" value="https://llm.xinjiyuan.tech/v1" />
+          <label for="modelInput">模型</label>
+          <input id="modelInput" type="text" autocomplete="off" value="boss-31b" />
+          <label for="apiKeyInput">API Key <span>仅本次会话保存</span></label>
+          <div class="key-field"><input id="apiKeyInput" type="password" autocomplete="off" placeholder="输入你的 API Key" /><button id="toggleKeyBtn" type="button" aria-label="显示 API Key">显示</button></div>
+          <button class="save-settings" id="saveConfigBtn" type="button">保存设置</button>
+          <p class="settings-note">密钥不会写入仓库或长期保存。</p>
+        </section>
+        <div class="sidebar-footer"><span class="avatar-mini">C</span><span>你的私人 AI 助手</span><span class="online-dot" title="就绪"></span></div>
+      </aside>
+
+      <main class="main-panel">
+        <header class="topbar">
+          <button class="mobile-menu" id="menuBtn" type="button" aria-label="打开菜单">☰</button>
+          <div class="model-label"><span class="model-sparkle">✳</span><span id="activeModel">boss-31b</span><span class="model-badge">AI</span></div>
+          <button class="clear-button" id="clearBtn" type="button" title="清空当前对话"><span aria-hidden="true">⌫</span><span>清空对话</span></button>
+        </header>
+
+        <section class="conversation" id="conversation" aria-live="polite" aria-label="对话内容">
+          <div class="welcome" id="welcome">
+            <div class="welcome-orb"><span>✳</span></div>
+            <p class="eyebrow">你好，欢迎回来</p>
+            <h1>今天有什么<br /><span>可以帮你？</span></h1>
+            <p class="welcome-copy">尽管提问、探索想法，或把复杂的事情交给我。</p>
+            <div class="suggestions" id="suggestions">
+              <button class="suggestion" type="button" data-prompt="帮我制定一个清晰、可执行的本周计划。"><span class="suggestion-icon lavender">✦</span><span><strong>规划一周</strong><small>把目标变成行动计划</small></span><span class="suggestion-arrow">↗</span></button>
+              <button class="suggestion" type="button" data-prompt="用简单易懂的方式解释一下人工智能中的大语言模型。"><span class="suggestion-icon mint">◈</span><span><strong>解释一个概念</strong><small>复杂知识，轻松理解</small></span><span class="suggestion-arrow">↗</span></button>
+              <button class="suggestion" type="button" data-prompt="帮我头脑风暴 5 个有创意的周末活动。"><span class="suggestion-icon peach">☼</span><span><strong>激发灵感</strong><small>从一个想法开始</small></span><span class="suggestion-arrow">↗</span></button>
+              <button class="suggestion" type="button" data-prompt="帮我润色一段文字，让它表达得更清楚、更自然。"><span class="suggestion-icon blue">✎</span><span><strong>润色文字</strong><small>让表达更清晰自然</small></span><span class="suggestion-arrow">↗</span></button>
+            </div>
+          </div>
+          <div class="messages" id="messages"></div>
+        </section>
+
+        <footer class="composer-area">
+          <form class="composer" id="chatForm">
+            <textarea id="userInput" rows="1" placeholder="给 ChiGuide 发消息…" aria-label="输入消息"></textarea>
+            <div class="composer-bottom"><span class="input-hint">Enter 发送 · Shift + Enter 换行</span><button class="send-button" id="sendBtn" type="submit" aria-label="发送消息"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+          </form>
+          <p class="disclaimer">AI 也可能会出错，请核实重要信息。</p>
+        </footer>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js" defer></script>
+  </body>
+</html>
