@@ -1,28 +1,29 @@
 # ChiGuide · AI 助手
 
-一个无需构建工具的轻量中文聊天网页，采用响应式布局，支持 OpenAI 兼容的 Chat Completions API、会话历史和快捷提问。
+一个可直接运行的中文聊天网页，包含响应式界面、多会话历史和 OpenAI 兼容 API 代理。代理与网页运行在同一服务上，避免浏览器跨域限制；API Key 可安全地放在本地 `.env` 文件中，不会提交到仓库。
 
-## 本地运行
+## 启动
 
-在仓库根目录启动静态服务器：
-
-```bash
-python3 -m http.server 3000
-```
-
-然后浏览器打开 <http://localhost:3000>。也可以使用 Node：
+需要 Node.js 18 或更新版本。在仓库根目录运行：
 
 ```bash
-npx serve .
+cp .env.example .env
 ```
 
-在左侧“模型设置”中确认 API 地址 `https://llm.xinjiyuan.tech/v1`、模型 `boss-31b`，并输入自己的 API Key，点击“保存设置”后开始聊天。
+编辑 `.env`，将 `LLM_API_KEY` 设置为**新生成的 API Key**，然后运行：
 
-## 安全说明
+```bash
+npm start
+```
 
-API Key 不包含在源代码中，也不会提交到仓库。地址和模型会保存在浏览器本地存储；API Key 仅保存在当前浏览器标签页的 sessionStorage，关闭标签页后清除。请勿在共享设备上输入密钥。此前在聊天中粘贴过的密钥已暴露，建议先在服务提供方撤销并重新生成，再使用新密钥。
+打开 <http://localhost:3000>。无需安装依赖。也可以不在 `.env` 配置密钥，启动后在左侧模型设置中临时输入 API Key。
 
-## 故障排查
+Windows 用户可复制 `.env.example` 为 `.env`，用文本编辑器填写新密钥，再运行 `npm start`。
 
-- `401/403`：检查新 API Key 是否有效，以及账号是否有该模型权限。
-- 浏览器提示无法连接/CORS：确认服务端支持从当前网页来源发起跨域请求；若不支持，需要在服务端配置允许的来源或使用自有后端代理。不要把长期有效的 API Key 放进公开前端代码。
+## 安全提醒
+
+曾经在聊天中粘贴过的密钥已暴露，请先在服务商后台撤销并重新生成。不要把密钥提交到 Git，也不要把服务器开放到公网后仍使用前端输入密钥的方式。`.env` 已通过 `.gitignore` 排除；部署到公网时，应通过托管服务的环境变量配置 `LLM_API_KEY`，并启用 HTTPS 和访问控制。
+
+## 配置
+
+`.env` 支持 `LLM_API_KEY`、`LLM_BASE_URL`、`LLM_MODEL` 和 `PORT`。默认模型接口是 `https://llm.xinjiyuan.tech/v1`，默认模型名是 `boss-31b`。
