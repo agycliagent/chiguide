@@ -1,8 +1,8 @@
-(() => {
-  'use strict';
+'use strict';
 
+(() => {
   const $ = (selector) => document.querySelector(selector);
-  const elements = {
+  const ui = {
     form: $('#chatForm'), input: $('#userInput'), send: $('#sendBtn'),
     messages: $('#messages'), welcome: $('#welcome'), baseUrl: $('#baseUrlInput'),
     apiKey: $('#apiKeyInput'), model: $('#modelInput'), activeModel: $('#activeModel'),
@@ -11,54 +11,57 @@
   const CONFIG_STORAGE = 'chiguide-config-v1';
   const HISTORY_STORAGE = 'chiguide-history-v1';
   let messages = [];
-  let isSending = false;
+  let sending = false;
   let toastTimer;
 
-  function readConfig() {
+  function configFromStorage() {
     try {
       const saved = JSON.parse(localStorage.getItem(CONFIG_STORAGE) || '{}');
-      const key = sessionStorage.getItem('chiguide-api-key') || '';
-      return { baseUrl: saved.baseUrl || 'https://llm.xinjiyuan.tech/v1', model: saved.model || 'boss-31b', apiKey: key };
+      return {
+        baseUrl: saved.baseUrl || 'https://llm.xinjiyuan.tech/v1',
+        model: saved.model || 'boss-31b',
+        apiKey: sessionStorage.getItem('chiguide-api-key') || ''
+      };
     } catch {
       return { baseUrl: 'https://llm.xinjiyuan.tech/v1', model: 'boss-31b', apiKey: '' };
     }
   }
 
-  function showToast(message) {
-    elements.toast.textContent = message;
-    elements.toast.classList.add('show');
+  function toast(text) {
+    ui.toast.textContent = text;
+    ui.toast.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => elements.toast.classList.remove('show'), 2800);
+    toastTimer = setTimeout(() => ui.toast.classList.remove('show'), 2800);
   }
 
-  function updateActiveModel() {
-    elements.activeModel.textContent = elements.model.value.trim() || '未设置模型';
+  function updateModelLabel() {
+    ui.activeModel.textContent = ui.model.value.trim() || '未设置模型';
   }
 
   function loadConfig() {
-    const config = readConfig();
-    elements.baseUrl.value = config.baseUrl;
-    elements.model.value = config.model;
-    elements.apiKey.value = config.apiKey;
-    updateActiveModel();
+    const config = configFromStorage();
+    ui.baseUrl.value = config.baseUrl;
+    ui.model.value = config.model;
+    ui.apiKey.value = config.apiKey;
+    updateModelLabel();
   }
 
   function saveConfig() {
     const config = {
-      baseUrl: elements.baseUrl.value.trim().replace(/\/+$/, ''),
-      model: elements.model.value.trim()
+      baseUrl: ui.baseUrl.value.trim().replace(/\/+$/, ''),
+      model: ui.model.value.trim()
     };
     if (!config.baseUrl || !config.model) {
-      showToast('请填写 API 地址和模型名称。');
+      toast('请填写 API 地址和模型名称。');
       return false;
     }
     localStorage.setItem(CONFIG_STORAGE, JSON.stringify(config));
-    const key = elements.apiKey.value.trim();
+    const key = ui.apiKey.value.trim();
     if (key) sessionStorage.setItem('chiguide-api-key', key);
     else sessionStorage.removeItem('chiguide-api-key');
-    elements.baseUrl.value = config.baseUrl;
-    updateActiveModel();
-    showToast('设置已保存。API Key 仅保留在当前标签页。');
+    ui.baseUrl.value = config.baseUrl;
+    updateModelLabel();
+    toast('设置已保存。API Key 仅保留在当前标签页。');
     return true;
   }
 
@@ -81,40 +84,38 @@
       body.textContent = content;
     }
     row.append(avatar, body);
-    elements.messages.appendChild(row);
-    elements.messages.scrollTop = elements.messages.scrollHeight;
+    ui.messages.appendChild(row);
+    ui.messages.scrollTop = ui.messages.scrollHeight;
     return row;
   }
 
   function renderConversation() {
-    elements.messages.replaceChildren();
-    elements.welcome.classList.toggle('hidden', messages.length > 0);
-    elements.messages.classList.toggle('visible', messages.length > 0);
+    ui.messages.replaceChildren();
+    ui.welcome.classList.toggle('hidden', messages.length > 0);
+    ui.messages.classList.toggle('visible', messages.length > 0);
     for (const message of messages) renderMessage(message.role, message.content);
-    elements.messages.scrollTop = elements.messages.scrollHeight;
+    ui.messages.scrollTop = ui.messages.scrollHeight;
   }
 
   function readHistory() {
     try {
-      const data = JSON.parse(localStorage.getItem(HISTORY_STORAGE) || '[]');
-      return Array.isArray(data) ? data.filter((item) => item && typeof item.title === 'string') : [];
+      const history = JSON.parse(localStorage.getItem(HISTORY_STORAGE) || '[]');
+      return Array.isArray(history) ? history.filter((item) => item && typeof item.title === 'string') : [];
     } catch { return []; }
   }
 
   function saveConversation() {
     if (!messages.length) return;
-    const history = readHistory();
     const firstUser = messages.find((message) => message.role === 'user');
     if (!firstUser) return;
-    const title = firstUser.content.slice(0, 40);
-    const saved = history.filter((item) => item.id !== window.currentChatId);
-    saved.unshift({ id: window.currentChatId, title, messages, updatedAt: Date.now() });
-    localStorage.setItem(HISTORY_STORAGE, JSON.stringify(saved.slice(0, 20)));
+    const history = readHistory().filter((item) => item.id !== window.currentChatId);
+    history.unshift({ id: window.currentChatId, title: firstUser.content.slice(0, 40), messages, updatedAt: Date.now() });
+    localStorage.setItem(HISTORY_STORAGE, JSON.stringify(history.slice(0, 20)));
     renderHistory();
   }
 
   function renderHistory() {
-    elements.history.replaceChildren();
+    ui.history.replaceChildren();
     for (const item of readHistory()) {
       const button = document.createElement('button');
       button.type = 'button';
@@ -127,9 +128,9 @@
         messages = Array.isArray(item.messages) ? item.messages : [];
         renderConversation();
         renderHistory();
-        elements.sidebar.classList.remove('open');
+        ui.sidebar.classList.remove('open');
       });
-      elements.history.appendChild(button);
+      ui.history.appendChild(button);
     }
   }
 
@@ -139,18 +140,19 @@
     messages = [];
     renderConversation();
     renderHistory();
-    elements.input.focus();
-    elements.sidebar.classList.remove('open');
+    ui.input.focus();
+    ui.sidebar.classList.remove('open');
   }
 
   async function requestCompletion(history) {
-    const config = readConfig();
-    const key = elements.apiKey.value.trim() || config.apiKey;
+    const config = configFromStorage();
+    const key = ui.apiKey.value.trim() || config.apiKey;
     if (!key) throw new Error('请先在左侧模型设置中填写 API Key。');
-    const baseUrl = elements.baseUrl.value.trim().replace(/\/+$/, '');
-    const model = elements.model.value.trim();
-    if (!baseUrl || !model) throw new Error('请先填写 API 地址和模型名称。');
-    const response = await fetch(`${baseUrl}/chat/completions`, {
+    const model = ui.model.value.trim();
+    if (!model) throw new Error('请填写模型名称。');
+
+    // Keep requests same-origin: server.js adds the upstream API key and avoids browser CORS.
+    const response = await fetch('/api/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
       body: JSON.stringify({ model, messages: history, temperature: 0.7 })
@@ -165,20 +167,20 @@
       throw new Error(`接口请求失败（${response.status}）${detail ? `：${detail}` : ''}`);
     }
     const data = await response.json();
-    const text = data?.choices?.[0]?.message?.content ?? data?.choices?.[0]?.text;
-    if (typeof text !== 'string' || !text.trim()) throw new Error('模型返回了空内容，请稍后重试。');
-    return text.trim();
+    const answer = data?.choices?.[0]?.message?.content ?? data?.choices?.[0]?.text;
+    if (typeof answer !== 'string' || !answer.trim()) throw new Error('模型返回了空内容，请稍后重试。');
+    return answer.trim();
   }
 
   async function sendMessage(text) {
-    if (isSending || !text.trim()) return;
+    if (sending || !text.trim()) return;
     const content = text.trim();
-    isSending = true;
-    elements.send.disabled = true;
-    elements.input.value = '';
+    sending = true;
+    ui.send.disabled = true;
+    ui.input.value = '';
     resizeInput();
-    elements.welcome.classList.add('hidden');
-    elements.messages.classList.add('visible');
+    ui.welcome.classList.add('hidden');
+    ui.messages.classList.add('visible');
     messages.push({ role: 'user', content });
     renderMessage('user', content);
     const pending = renderMessage('assistant', '', { typing: true });
@@ -190,33 +192,32 @@
       saveConversation();
     } catch (error) {
       pending.remove();
-      const message = error instanceof TypeError
-        ? '无法连接接口。请检查网络、API 地址以及服务端是否允许浏览器跨域访问（CORS）。'
+      const errorText = error instanceof TypeError
+        ? '无法连接本地服务。请确认通过 npm start 启动，并使用 http://localhost:3000 打开页面。'
         : (error?.message || '发生未知错误，请稍后重试。');
-      renderMessage('assistant', message, { error: true });
-      // Do not save an API error as part of the chat history sent to the model.
+      renderMessage('assistant', errorText, { error: true });
       saveConversation();
     } finally {
-      isSending = false;
-      elements.send.disabled = false;
-      elements.input.focus();
+      sending = false;
+      ui.send.disabled = false;
+      ui.input.focus();
     }
   }
 
   function resizeInput() {
-    elements.input.style.height = 'auto';
-    elements.input.style.height = `${Math.min(elements.input.scrollHeight, 150)}px`;
+    ui.input.style.height = 'auto';
+    ui.input.style.height = `${Math.min(ui.input.scrollHeight, 150)}px`;
   }
 
-  elements.form.addEventListener('submit', (event) => {
+  ui.form.addEventListener('submit', (event) => {
     event.preventDefault();
-    sendMessage(elements.input.value);
+    sendMessage(ui.input.value);
   });
-  elements.input.addEventListener('input', resizeInput);
-  elements.input.addEventListener('keydown', (event) => {
+  ui.input.addEventListener('input', resizeInput);
+  ui.input.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
       event.preventDefault();
-      elements.form.requestSubmit();
+      ui.form.requestSubmit();
     }
   });
   document.querySelectorAll('.suggestion').forEach((button) => {
@@ -228,25 +229,21 @@
     window.currentChatId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
     renderConversation();
     renderHistory();
-    showToast('当前对话已清空。');
+    toast('当前对话已清空。');
   });
   $('#saveConfigBtn').addEventListener('click', saveConfig);
   $('#toggleKeyBtn').addEventListener('click', (event) => {
-    const visible = elements.apiKey.type === 'password';
-    elements.apiKey.type = visible ? 'text' : 'password';
+    const visible = ui.apiKey.type === 'password';
+    ui.apiKey.type = visible ? 'text' : 'password';
     event.currentTarget.textContent = visible ? '隐藏' : '显示';
     event.currentTarget.setAttribute('aria-label', visible ? '隐藏 API Key' : '显示 API Key');
   });
-  elements.model.addEventListener('input', updateActiveModel);
-  $('#menuBtn').addEventListener('click', () => elements.sidebar.classList.toggle('open'));
+  ui.model.addEventListener('input', updateModelLabel);
+  $('#menuBtn').addEventListener('click', () => ui.sidebar.classList.toggle('open'));
   document.addEventListener('click', (event) => {
-    if (window.innerWidth <= 760 && elements.sidebar.classList.contains('open') && !elements.sidebar.contains(event.target) && !event.target.closest('#menuBtn')) {
-      elements.sidebar.classList.remove('open');
+    if (window.innerWidth <= 760 && ui.sidebar.classList.contains('open') && !ui.sidebar.contains(event.target) && !event.target.closest('#menuBtn')) {
+      ui.sidebar.classList.remove('open');
     }
-  });
-  window.addEventListener('beforeunload', () => {
-    const key = elements.apiKey.value.trim();
-    if (key) sessionStorage.setItem('chiguide-api-key', key);
   });
 
   window.currentChatId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;

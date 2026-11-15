@@ -16,7 +16,7 @@ cp .env.example .env
 npm start
 ```
 
-打开 <http://localhost:3000>。无需安装依赖。也可以不在 `.env` 配置密钥，启动后在左侧模型设置中临时输入 API Key。
+打开 <http://localhost:3000>。无需安装依赖。也可以不在 `.env` 配置密钥，启动后在左侧模型设置中临时输入 API Key。网页请求会发到同源的 `/api/chat/completions`，由 `server.js` 转发到模型服务，避免浏览器 CORS 限制。
 
 Windows 用户可复制 `.env.example` 为 `.env`，用文本编辑器填写新密钥，再运行 `npm start`。
 
